@@ -12,12 +12,32 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
+#[cfg(feature = "runtime-benchmarks")]
+pub trait BenchmarkHelper<CollectionId, ItemId> {
+	fn to_collection(i: u32) -> CollectionId;
+	fn to_nft(i: u32) -> ItemId;
+}
+#[cfg(feature = "runtime-benchmarks")]
+pub struct NftHelper;
+
+#[cfg(feature = "runtime-benchmarks")]
+impl<CollectionId: From<u32>, ItemId: From<u32>> BenchmarkHelper<CollectionId, ItemId> for NftHelper
+{
+	fn to_collection(i: u32) -> CollectionId {
+		i.into()
+	}
+	fn to_nft(i: u32) -> ItemId {
+		i.into()
+	}
+}
+
 #[frame_support::pallet]
 pub mod pallet {
+	use super::*;
 	use frame_support::{pallet_prelude::{*, DispatchResult}, Blake2_128Concat};
 	use frame_system::pallet_prelude::*;
 
-use crate::types::NftInfo;
+	use crate::types::NftInfo;
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
@@ -26,6 +46,9 @@ use crate::types::NftInfo;
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_uniques::Config {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+		#[cfg(feature = "runtime-benchmarks")]
+		type Helper: crate::BenchmarkHelper<Self::CollectionId, Self::ItemId>;
 	}
 
 	#[pallet::storage]
