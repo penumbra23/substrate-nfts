@@ -13,20 +13,24 @@ mod tests;
 mod benchmarking;
 
 #[cfg(feature = "runtime-benchmarks")]
-pub trait BenchmarkHelper<CollectionId, ItemId> {
+pub trait BenchmarkHelper<CollectionId, ItemId, AccountId> {
 	fn to_collection(i: u32) -> CollectionId;
 	fn to_nft(i: u32) -> ItemId;
+	fn to_account(i: u32) -> AccountId;
 }
 #[cfg(feature = "runtime-benchmarks")]
 pub struct NftHelper;
 
 #[cfg(feature = "runtime-benchmarks")]
-impl<CollectionId: From<u32>, ItemId: From<u32>> BenchmarkHelper<CollectionId, ItemId> for NftHelper
+impl<CollectionId: From<u32>, ItemId: From<u32>, AccountId: From<u32>> BenchmarkHelper<CollectionId, ItemId, AccountId> for NftHelper
 {
 	fn to_collection(i: u32) -> CollectionId {
 		i.into()
 	}
 	fn to_nft(i: u32) -> ItemId {
+		i.into()
+	}
+	fn to_account(i: u32) -> AccountId {
 		i.into()
 	}
 }
@@ -48,7 +52,7 @@ pub mod pallet {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		#[cfg(feature = "runtime-benchmarks")]
-		type Helper: crate::BenchmarkHelper<Self::CollectionId, Self::ItemId>;
+		type Helper: crate::BenchmarkHelper<Self::CollectionId, Self::ItemId, Self::AccountId>;
 	}
 
 	#[pallet::storage]
