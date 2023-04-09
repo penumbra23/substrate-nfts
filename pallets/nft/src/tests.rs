@@ -1,27 +1,42 @@
-use crate::{mock::*, Error, Event};
-use frame_support::{assert_noop, assert_ok};
+use crate::{mock::*, Error, Event, types::NftInfo};
+use frame_support::{assert_ok, BoundedVec, assert_noop};
+use sp_core::ConstU32;
 
 #[test]
-fn it_works_for_default_value() {
+fn basic_mint() {
 	new_test_ext().execute_with(|| {
-		// Go past genesis block so events get deposited
 		System::set_block_number(1);
-		// Dispatch a signed extrinsic.
-		assert_ok!(TemplateModule::do_something(RuntimeOrigin::signed(1), 42));
-		// Read pallet storage and assert an expected result.
-		assert_eq!(TemplateModule::something(), Some(42));
-		// Assert that the correct event was deposited
-		System::assert_last_event(Event::SomethingStored { something: 42, who: 1 }.into());
+        let metadata: BoundedVec<u8, ConstU32<128>> = vec![0, 1, 2].try_into().unwrap();
+        let nft = NftInfo {
+            minter: ALICE,
+            metadata: metadata.clone(),
+            transferable: true,
+        };
+        assert_ok!(NftModule::create_collection(RuntimeOrigin::signed(ALICE), 2));
+		assert_ok!(NftModule::mint(RuntimeOrigin::signed(ALICE), COLLECTION_ID, 3, metadata, ALICE, true));
+		assert_eq!(NftModule::nfts(COLLECTION_ID, 3), Some(nft));
+		System::assert_last_event(Event::NftMinted {
+            collection_id: COLLECTION_ID, nft_id: 3, minter: ALICE }.into());
 	});
 }
 
 #[test]
-fn correct_error_for_none_value() {
+fn basic_transfer() {
 	new_test_ext().execute_with(|| {
-		// Ensure the expected error is thrown when no value is present.
-		assert_noop!(
-			TemplateModule::cause_error(RuntimeOrigin::signed(1)),
-			Error::<Test>::NoneValue
-		);
+		System::set_block_number(1);
+        let metadata: BoundedVec<u8, ConstU32<128>> = vec![0, 1, 2].try_into().unwrap();
+
+        assert_ok!(NftModule::create_collection(RuntimeOrigin::signed(ALICE), 2));
+		assert_ok!(NftModule::mint(RuntimeOrigin::signed(ALICE), COLLECTION_ID, 3, metadata.clone(), ALICE, true));
+        assert_ok!(NftModule::mint(RuntimeOrigin::signed(BOB), COLLECTION_ID, 4, metadata, BOB, true));
+
+        assert_ok!(NftModule::transfer(RuntimeOrigin::signed(ALICE), COLLECTION_ID, 3, BOB));
+        // Transfer again, should return error
+        assert_noop!(
+            NftModule::transfer(RuntimeOrigin::signed(ALICE), COLLECTION_ID, 3, BOB),
+            Error::<Test>::SenderNotOwner
+        );
+
+        assert_ok!(NftModule::transfer(RuntimeOrigin::signed(BOB), COLLECTION_ID, 3, ALICE));
 	});
 }

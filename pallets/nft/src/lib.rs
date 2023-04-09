@@ -14,7 +14,7 @@ mod benchmarking;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::{pallet_prelude::*, Blake2_128Concat};
+	use frame_support::{pallet_prelude::{*, DispatchResult}, Blake2_128Concat};
 	use frame_system::pallet_prelude::*;
 
 use crate::types::NftInfo;
@@ -50,7 +50,9 @@ use crate::types::NftInfo;
 	pub enum Error<T> {
 		NftExists,
 		NftNotFound,
+		NoOwner,
 		SenderNotOwner,
+		SendToOriginNotAllowed,
 	}
 
 	/// Private methods
@@ -63,6 +65,27 @@ use crate::types::NftInfo;
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::call_index(0)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn create_collection(origin: OriginFor<T>,
+			collection_id: T::CollectionId
+		) -> DispatchResult {
+			let creator = ensure_signed(origin)?;
+			pallet_uniques::Pallet::<T>::do_create_collection(
+				collection_id,
+				creator.clone(),
+				creator.clone(),
+				T::CollectionDeposit::get(),
+				false,
+				pallet_uniques::Event::Created {
+					creator: creator.clone(),
+					owner: creator.clone(),
+					collection: collection_id,
+				},
+			)?;
+			Ok(())
+		}
+
+		#[pallet::call_index(1)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn mint(origin: OriginFor<T>,
 			collection_id: T::CollectionId,
@@ -91,7 +114,7 @@ use crate::types::NftInfo;
 			Ok(())
 		}
 
-		#[pallet::call_index(1)]
+		#[pallet::call_index(2)]
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1).ref_time())]
 		pub fn transfer(origin: OriginFor<T>,
 			collection_id: T::CollectionId,
@@ -99,9 +122,20 @@ use crate::types::NftInfo;
 			to: T::AccountId
 		) -> DispatchResult {
 			ensure!(Self::nft_exists(collection_id, item_id), Error::<T>::NftExists);
+
 			let sender = ensure_signed(origin)?;
 
+			ensure!(sender != to, Error::<T>::SendToOriginNotAllowed);
+
 			pallet_uniques::Pallet::<T>::do_transfer(collection_id, item_id, to.clone(), |_, _| {
+				let owner_opt = pallet_uniques::Pallet::<T>::owner(collection_id, item_id);
+				if let Some(owner) = owner_opt {
+					if owner != sender {
+						return Err(Error::<T>::SenderNotOwner.into());
+					}
+				} else {
+					return Err(Error::<T>::NoOwner.into());
+				}
 				Ok(())
 			})?;
 
