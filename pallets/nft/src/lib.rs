@@ -42,6 +42,7 @@ use crate::types::NftInfo;
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
+		CollectionCreated { collection_id: T::CollectionId },
 		NftMinted { collection_id: T::CollectionId, nft_id: T::ItemId, minter: T::AccountId },
 		NftTransfered { collection_id: T::CollectionId, nft_id: T::ItemId, from: T::AccountId, to: T::AccountId }
 	}
@@ -82,6 +83,8 @@ use crate::types::NftInfo;
 					collection: collection_id,
 				},
 			)?;
+
+			Self::deposit_event(Event::CollectionCreated { collection_id });
 			Ok(())
 		}
 
