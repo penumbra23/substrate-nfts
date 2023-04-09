@@ -92,6 +92,7 @@ impl pallet_uniques::Config for Test {
 
 impl pallet_nft::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = weights::SubstrateWeight<Test>;
 	#[cfg(feature = "runtime-benchmarks")]
 	type Helper = NftHelper;
 }

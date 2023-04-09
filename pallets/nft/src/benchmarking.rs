@@ -6,7 +6,7 @@ use super::*;
 use crate::Pallet as NftBench;
 
 use crate::Event;
-use frame_benchmarking::v1::{benchmarks, whitelisted_caller};
+use frame_benchmarking::v1::{benchmarks, whitelisted_caller, vec, account};
 use frame_system::RawOrigin;
 use frame_support::traits::Currency;
 use frame_support::sp_runtime::traits::Bounded;
@@ -46,7 +46,7 @@ benchmarks! {
         let collection_id: T::CollectionId = T::Helper::to_collection(2);
 		let nft_id: T::ItemId = T::Helper::to_nft(10);
 		let metadata = vec![0, 1, 2].try_into().unwrap();
-		let receiver: T::AccountId = T::Helper::to_account(3);
+		let receiver: T::AccountId = account("r", 1, 0);
 
         <T as pallet_uniques::Config>::Currency::make_free_balance_be(&minter.clone(), AccountBalance::<T>::max_value());
 

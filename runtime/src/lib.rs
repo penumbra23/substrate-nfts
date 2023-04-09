@@ -314,6 +314,9 @@ impl pallet_sudo::Config for Runtime {
 /// Configure the pallet-nft in pallets/nft.
 impl pallet_nft::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = pallet_nft::weights::SubstrateWeight<Runtime>;
+	#[cfg(feature = "runtime-benchmarks")]
+	type Helper = pallet_nft::NftHelper;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
