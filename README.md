@@ -137,15 +137,16 @@ Review the [FRAME runtime implementation](./runtime/src/lib.rs) included in this
 
 ### Pallets
 
-The runtime in this project is constructed using many FRAME pallets that ship with the [core Substrate repository](https://github.com/paritytech/substrate/tree/master/frame) and a template pallet that is [defined in the `pallets`](./pallets/nft/src/lib.rs) directory.
+### pallet-nft
 
-A FRAME pallet is compromised of a number of blockchain primitives:
+The NFT pallet extends the [`uniques`](https://crates.parity.io/pallet_uniques/index.html) pallet from the FRAME library. `NFTs` are grouped inside `collections` and encapsulate a metadata which can actually be any byte-array (test, JSON, IPFS link, etc.).
 
-- Storage: FRAME defines a rich set of powerful [storage abstractions](https://docs.substrate.io/build/runtime-storage/) that makes it easy to use Substrate's efficient key-value database to manage the evolving state of a blockchain.
-- Dispatchables: FRAME pallets define special types of functions that can be invoked (dispatched) from outside of the runtime in order to update its state.
-- Events: Substrate uses [events and errors](https://docs.substrate.io/build/events-and-errors/) to notify users of important changes in the runtime.
-- Errors: When a dispatchable fails, it returns an error.
-- Config: The `Config` configuration interface is used to define the types and parameters upon which a FRAME pallet depends.
+Functions:
+
+- `create_collection(collection_id)` - creates a collection with a specific ID
+- `mint(collection_id, item_id, metadata, owner, transferable)` - mints a new NFT inside a collection with the given metadata to a specific address (owner)
+- `transfer(collection_id, item_id, destination)` - transfers the NFT from the sender to the destination address
+
 
 ## Alternatives Installations
 

@@ -1,13 +1,13 @@
 [package]
 name = "pallet-nft"
 version = "4.0.0-dev"
-description = "FRAME pallet template for defining custom runtime logic."
-authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
+description = "Custom pallet for NFTs on Substrate"
+authors = ["penumbra23"]
 homepage = "https://substrate.io"
 edition = "2021"
-license = "Unlicense"
+license = "MIT"
 publish = false
-repository = "https://github.com/substrate-developer-hub/substrate-node-template/"
+repository = "https://github.com/penumbra23/substrate-nfts"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
