@@ -40,3 +40,19 @@ fn basic_transfer() {
         assert_ok!(NftModule::transfer(RuntimeOrigin::signed(BOB), COLLECTION_ID, 3, ALICE));
 	});
 }
+
+#[test]
+fn transfer_non_transferable() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(1);
+        let metadata: BoundedVec<u8, ConstU32<128>> = vec![0, 1, 2].try_into().unwrap();
+
+        assert_ok!(NftModule::create_collection(RuntimeOrigin::signed(ALICE), 2));
+		assert_ok!(NftModule::mint(RuntimeOrigin::signed(ALICE), COLLECTION_ID, 3, metadata.clone(), ALICE, false));
+
+        assert_noop!(
+            NftModule::transfer(RuntimeOrigin::signed(ALICE), COLLECTION_ID, 3, BOB),
+            Error::<Test>::NotTransferable
+        );
+	});
+}

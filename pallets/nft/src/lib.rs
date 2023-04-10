@@ -82,12 +82,20 @@ pub mod pallet {
 		NoOwner,
 		SenderNotOwner,
 		SendToOriginNotAllowed,
+		NotTransferable
 	}
 
 	/// Private methods
 	impl<T: Config> Pallet<T> {
 		pub fn nft_exists(collection_id: T::CollectionId, item_id: T::ItemId) -> bool {
 			Nfts::<T>::get(collection_id, item_id).is_some()
+		}
+
+		pub fn get_nft(collection_id: T::CollectionId, item_id: T::ItemId) -> Result<NftInfo<T::AccountId>, Error<T>> {
+			match Nfts::<T>::get(collection_id, item_id) {
+				Some(nft) => Ok(nft),
+				None => Err(Error::<T>::NftNotFound), 
+			}
 		}
 	}
 
@@ -166,6 +174,11 @@ pub mod pallet {
 					}
 				} else {
 					return Err(Error::<T>::NoOwner.into());
+				}
+
+				let nft = Self::get_nft(collection_id, item_id)?;
+				if !nft.transferable {
+					return Err(Error::<T>::NotTransferable.into());
 				}
 				Ok(())
 			})?;
